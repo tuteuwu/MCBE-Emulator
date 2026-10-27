@@ -2,18 +2,20 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 #include "utils.c"
+#include "cpuEmu.c"
 
 int main(int argc, char *argv[]) {
+
+  bool seePreview = true;
+
   FILE *file = fopen(argv[1], "r");
   char lines[32][16];
 
   // Emulator Data
 
   uint8_t Memory[32];
-  uint8_t ProgramCounter = 0;
-  uint8_t InstructionRegister;
-  uint8_t Acumulator = 0;
 
   // End emulator Data
   
@@ -22,37 +24,56 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  int i = 0;
-  while (i < 32 && fgets(lines[i], sizeof(lines[i]), file) != NULL) {
-    i++;
+  int linesCounter = 0;
+  while (linesCounter < 32 && fgets(lines[linesCounter], sizeof(lines[linesCounter]), file) != NULL) {
+    linesCounter++;
   }
   fclose(file);
-
-
-  for (int j = 0; j < i; j++){
-    char inst[4] = "---";
+  // Load to Memory
+  for (int j = 0; j < linesCounter; j++){
+    char inst[4] = "";
     int arg = 0;
-    sscanf(lines[j], "%3s %d", inst, &arg);
-    if(arg >= 32){
-      printf("value out of range. \n\tLine %d | %s %d\n", j, inst, arg);
-      return 1;
+    int n = sscanf(lines[j], "%3s %d", inst, &arg);
+
+    if(strcmp(inst, "JMP") == 0 || strcmp(inst, "JZ") == 0){
+      if(arg < -16 || arg > 15){
+        printf("value out of range. \n\tLine %d | %s %d\n", j, inst, arg);
+        return 1;
+      }
+    } else if(strcmp(inst, "DAT") == 0) {
+      if(arg < -128 || arg > 127){
+        printf("value out of range. \n\tLine %d | %s %d\n", j, inst, arg);
+        return 1;
+      }
+    } else {
+      if (arg >= 32 || arg < 0){
+        printf("value out of range. \n\tLine %d | %s %d\n", j, inst, arg);
+        return 1;
+      }
     }
+
     Memory[j] = InstructionToBinary(inst, arg);
   }
 
-  printf("| Line \t| Inst\t| Arg\n");
-  for(int j = 0; j < i; j++){
-    char inst[4] = "---";
-    int arg = 0;
-    sscanf(lines[j], "%3s %d", inst, &arg);
 
-    printf("| %d \t| %s \t| %d\n", j, inst, arg);
+  // Start CPU 
+  Initialize(Memory);
+  printfStatus();
+  InitCycle(true);
+  printfStatus();
 
+  // Print Preview
+  if(seePreview){
+    printf("| Line \t| Inst\t| Arg\n");
+    for(int j = 0; j < linesCounter; j++){
+      char inst[4] = "---";
+      int arg = 0;
+      sscanf(lines[j], "%3s %d", inst, &arg);
+      printf("| %d \t| %s \t| %d\n", j, inst, arg);
+    }
   }
-  printf("END\n");
+
 
   return 0;
 }
-
-
 

@@ -4,7 +4,8 @@
 #include <string.h>
 
 uint8_t InstructionToBinary(char ints[4], int arg){
-  uint8_t bin;
+  uint8_t bin = 0b00000000;
+  uint8_t arg_mask = 0b00011111;
   if (strcmp(ints, "NOP") == 0) {
     bin = 0b00000000;
   } else if (strcmp(ints, "HLT") == 0) {
@@ -21,13 +22,11 @@ uint8_t InstructionToBinary(char ints[4], int arg){
     bin = 0b11000000;
   } else if (strcmp(ints, "JZ") == 0) {
     bin = 0b11100000;
-  } else if (strcmp(ints, "SET") == 0) {
-    bin = 0b00000000;
-  } else {
-    bin = 0b00000000;
+  } else if (strcmp(ints, "DAT") == 0) {
+    arg_mask = 0b11111111;
   }
 
-  bin |= (arg & 0b00011111);
+  bin |= ((uint8_t)arg & arg_mask);
 
   return bin;
 }
@@ -42,3 +41,5 @@ char *ToBinaryString(uint8_t bin) {
   str[8] = '\0';
   return str;
 }
+
+

@@ -1,7 +1,7 @@
-LD  30
-ADD 30
+LD  28
+ADD 29
 ST  31
-HLT
+HLT 0
 
 
 
@@ -26,7 +26,7 @@ HLT
 
 
 
-
-SET 3
+DAT 32
+DAT 64
 IN
 OUT
