@@ -10,9 +10,9 @@ Emulador de la maquina conceptual MCBE (Modelo Computacional Básico Elemental)
 	`gcc main -o mcbe`
 ### **Como usarlo?**
 - Ejecutarlo con un parámetro de entrada:
-	`./mcbe codigo.mcbe`
+- `./mcbe codigo.mcbe`
 - Ejecutarlo con logs:
-	`./mcbe -l codigo.mcbe`
+- `./mcbe -l codigo.mcbe`
 
 # **Como Funciona ?**
 
@@ -26,28 +26,28 @@ Emulador de la maquina conceptual MCBE (Modelo Computacional Básico Elemental)
 	- Accumulator
 	- Unidad de Control (UC)
 
- Memoria:
-	 La memoria esta compuesta por 32 (0-31) casillas de 1 byte.
-	 La casilla 30 esta reservada para la entrada (input).
-	 La casilla 31 esta reservada para la salida (output).
- CPU:
-	 ALU:
-		 Unidad aritmetico-logica. Se encarga de hacer las operaciones logicas.
-	 PC:
-		 Contador de programa. Registra la direccion en memoria de la proxima instruccion.
-	 IR:
-		 Registro De Instruccion. Registra la instruccion actual a ejecutar.
-	 Accumulator
-		 Acumulador. registro que guarda un dato para operar.
-	 UC
-		 Unidad de control. Decodifica las instrucciones y orquesta el hardware.
+- Memoria:
+	- La memoria esta compuesta por 32 (0-31) casillas de 1 byte.
+	- La casilla 30 esta reservada para la entrada (input).
+	- La casilla 31 esta reservada para la salida (output).
+- CPU:
+	- ALU:
+		- Unidad aritmetico-logica. Se encarga de hacer las operaciones logicas.
+	- PC:
+		- Contador de programa. Registra la direccion en memoria de la proxima instruccion.
+	- IR:
+		- Registro De Instruccion. Registra la instruccion actual a ejecutar.
+	- Accumulator
+		- Acumulador. registro que guarda un dato para operar.
+	- UC
+		- Unidad de control. Decodifica las instrucciones y orquesta el hardware.
 
 
 Instrucciones:
 
-Las instrucciones se componen de 1 byte. donde los primeros 3 bits representan la instrucción y los ultimo 5 el argumento.
+- Las instrucciones se componen de 1 byte. donde los primeros 3 bits representan la instrucción y los ultimo 5 el argumento.
 
-`    000        00000   `
-`Instrucción   Argumento`
+- `    000        00000   `
+- `Instrucción   Argumento`
 
-Esto da lugar a 8 instrucciones y 32 argumentos.
+- Esto da lugar a 8 instrucciones y 32 argumentos.
