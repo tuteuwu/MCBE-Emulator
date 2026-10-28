@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   int fileArg = 1;
   bool logs = false;
   if(strcmp(argv[1], "-l") == 0){
-    printf("Argumento\n");
+    printf("Logs enabled\n");
     fileArg = 2;
     logs = true;
   }
@@ -25,7 +25,9 @@ int main(int argc, char *argv[]) {
   // Emulator Data
 
   uint8_t Memory[32];
-
+  for(int i = 0; i < 32; i++){
+    Memory[i] = 0;
+  }
   
   if (file == NULL) {
     printf("Unable to open file.\n");
