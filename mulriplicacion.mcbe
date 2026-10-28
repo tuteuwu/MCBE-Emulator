@@ -1,32 +1,17 @@
-LD  28
-ADD 28
+LD  30
+ST  29
+ST  28
+LD  30
 ST  27
+SET 1
+NOP
 LD  29
-JZ  -4
-HLT 0
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-DAT 2
-DAT 4
-IN
-OUT
+ADD 28
+ST  29
+LD  27
+SUB 5
+ST  27
+JZ  -7
+LD  29
+ST  31
+HLT

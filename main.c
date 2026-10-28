@@ -6,18 +6,26 @@
 #include "utils.c"
 #include "cpuEmu.c"
 
+
+
 int main(int argc, char *argv[]) {
+  int fileArg = 1;
+  bool logs = false;
+  if(strcmp(argv[1], "-l") == 0){
+    printf("Argumento\n");
+    fileArg = 2;
+    logs = true;
+  }
 
-  bool seePreview = true;
+  
 
-  FILE *file = fopen(argv[1], "r");
+  FILE *file = fopen(argv[fileArg], "r");
   char lines[32][16];
 
   // Emulator Data
 
   uint8_t Memory[32];
 
-  // End emulator Data
   
   if (file == NULL) {
     printf("Unable to open file.\n");
@@ -58,12 +66,10 @@ int main(int argc, char *argv[]) {
 
   // Start CPU 
   Initialize(Memory);
-  printfStatus();
-  InitCycle(true);
-  printfStatus();
+  InitCycle(logs);
 
   // Print Preview
-  if(seePreview){
+  if(logs){
     printf("| Line \t| Inst\t| Arg\n");
     for(int j = 0; j < linesCounter; j++){
       char inst[4] = "---";

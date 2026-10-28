@@ -12,6 +12,21 @@ void InstructionCycle(void);
 void printfStatus(void);
 void InitCycle(bool logs);
 
+void getUserInput(uint8_t *output){
+  int input;
+  scanf("%d", &input);
+  if(input > 127 || input < -128){
+    printf("Not valid input.\n");
+  }else{
+    *output = (uint8_t)input;
+  }  
+}
+
+void printOutput(uint8_t input){
+  printf("%d\n", (int8_t)input);
+}
+
+
 // ISA
 void NOP();
 void HLT(bool *b);
@@ -100,15 +115,27 @@ void HLT(bool *b){
   *b = false;
 }
 void LD(uint8_t *ac, uint8_t *mem, uint8_t arg){
+  if(arg == 30){
+    getUserInput(&mem[30]);
+  }
   *ac = mem[arg];
 }
 void ST(uint8_t *ac, uint8_t *mem, uint8_t arg){
   mem[arg] = *ac;
+  if(arg == 31){
+    printOutput(mem[31]);
+  }
 }
 void ADD(uint8_t *ac, uint8_t *mem, uint8_t arg){
+  if(arg == 30){
+    getUserInput(&mem[30]);
+  }
   *ac += mem[arg];
 }
 void SUB(uint8_t *ac, uint8_t *mem, uint8_t arg){
+  if(arg == 30){
+    getUserInput(&mem[30]);
+  }
   *ac -= mem[arg];
 }
 void JMP(uint8_t *pc, int8_t arg){

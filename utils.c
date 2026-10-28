@@ -22,7 +22,7 @@ uint8_t InstructionToBinary(char ints[4], int arg){
     bin = 0b11000000;
   } else if (strcmp(ints, "JZ") == 0) {
     bin = 0b11100000;
-  } else if (strcmp(ints, "DAT") == 0) {
+  } else if (strcmp(ints, "SET") == 0) {
     arg_mask = 0b11111111;
   }
 
