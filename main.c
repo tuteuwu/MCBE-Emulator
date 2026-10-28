@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
         printf("value out of range. \n\tLine %d | %s %d\n", j, inst, arg);
         return 1;
       }
-    } else if(strcmp(inst, "DAT") == 0) {
+    } else if(strcmp(inst, "SET") == 0) {
       if(arg < -128 || arg > 127){
         printf("value out of range. \n\tLine %d | %s %d\n", j, inst, arg);
         return 1;
