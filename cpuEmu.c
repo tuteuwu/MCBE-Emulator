@@ -3,29 +3,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include "ttyEmu.c"
 
 // Functions
 void fetch(uint8_t *mem, uint8_t  *pc, uint8_t  *ir);
 uint8_t decode(uint8_t *ir, uint8_t *argOut);
 int8_t decodeOffset(uint8_t arg);
-void InstructionCycle(void);
-void printfStatus(void);
-void InitCycle(bool logs);
-
-void getUserInput(uint8_t *output){
-  int input;
-  scanf("%d", &input);
-  if(input > 127 || input < -128){
-    printf("Not valid input.\n");
-  }else{
-    *output = (uint8_t)input;
-  }  
-}
-
-void printOutput(uint8_t input){
-  printf("%d\n", (int8_t)input);
-}
-
+void InstructionCycle();
 
 // ISA
 void NOP();
@@ -41,26 +25,28 @@ void JZ(uint8_t *pc, uint8_t ac, int8_t arg);
 static uint8_t Memory[32];
 static uint8_t ProgramCounter = 0;
 static uint8_t InstructionRegister = 0;
-static uint8_t Acumulator = 0;
+static uint8_t Accumulator = 0;
+
 // Status
-
 static bool isOn = false;
+int (*logCallback)(uint8_t pc, uint8_t ir, uint8_t Ac);
 
-void Initialize(uint8_t mem[32]){
+void Initialize(uint8_t mem[32], int (logFunction)(uint8_t pc, uint8_t ir, uint8_t Ac)){
   for(int i = 0; i < 32; i++){
     Memory[i] = mem[i];
   }
   ProgramCounter = 0;
   InstructionRegister = 0;
-  Acumulator = 0;
+  Accumulator = 0;
   isOn = true;
+  logCallback = logFunction;
 }
 
 void InitCycle(bool logs){
   while (isOn){
     InstructionCycle();
     if(logs){
-      printfStatus();
+      logCallback(ProgramCounter, InstructionRegister, Accumulator);
     }
 
   }
@@ -75,24 +61,14 @@ void InstructionCycle(){
   switch(inst){
     case 0: NOP(); break;
     case 1: HLT(&isOn); break;
-    case 2: LD(&Acumulator, Memory, arg); break;
-    case 3: ST(&Acumulator, Memory, arg); break;
-    case 4: ADD(&Acumulator, Memory, arg); break;
-    case 5: SUB(&Acumulator, Memory, arg); break;
+    case 2: LD(&Accumulator, Memory, arg); break;
+    case 3: ST(&Accumulator, Memory, arg); break;
+    case 4: ADD(&Accumulator, Memory, arg); break;
+    case 5: SUB(&Accumulator, Memory, arg); break;
     case 6: JMP(&ProgramCounter, decodeOffset(arg)); break;
-    case 7: JZ(&ProgramCounter, Acumulator, decodeOffset(arg)); break;
+    case 7: JZ(&ProgramCounter, Accumulator, decodeOffset(arg)); break;
   }
 }
-
-
-void printfStatus(){
-  if(isOn){
-    printf("Working\n\n");
-    printf("PC: %d \t IR: 0x%x \t Ac: %d\n", ProgramCounter, InstructionRegister, Acumulator);
-  }
-  
-}
-
 
 void fetch(uint8_t *mem, uint8_t  *pc, uint8_t  *ir){
   *ir = mem[*pc];

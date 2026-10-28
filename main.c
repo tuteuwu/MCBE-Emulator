@@ -6,7 +6,7 @@
 #include "utils.c"
 #include "cpuEmu.c"
 
-
+int runTimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac);
 
 int main(int argc, char *argv[]) {
   int fileArg = 1;
@@ -67,21 +67,26 @@ int main(int argc, char *argv[]) {
 
 
   // Start CPU 
-  Initialize(Memory);
+  Initialize(Memory, &runTimeLogs);
   InitCycle(logs);
 
   // Print Preview
   if(logs){
-    printf("| Line \t| Inst\t| Arg\n");
+    printf("\n| Line \t| Inst\t| Arg\t| Hex\n");
     for(int j = 0; j < linesCounter; j++){
       char inst[4] = "---";
       int arg = 0;
       sscanf(lines[j], "%3s %d", inst, &arg);
-      printf("| %d \t| %s \t| %d\n", j, inst, arg);
+      printf("| %d \t| %s \t| %d \t| %x\n", j, inst, arg, Memory[j]);
     }
   }
 
 
   return 0;
+}
+
+
+int runTimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac){
+  printf("| PC: %d \t| IR: 0x%x \t| Accumulator: %d \n", pc, ir, Ac);
 }
 
