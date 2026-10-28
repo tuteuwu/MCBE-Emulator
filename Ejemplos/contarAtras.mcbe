@@ -1,0 +1,10 @@
+LD  30
+ST  10
+LD  10
+JZ  4
+ST  31
+SUB 9
+ST  10
+JMP -5
+HLT 0
+SET 1
