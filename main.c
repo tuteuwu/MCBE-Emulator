@@ -6,11 +6,14 @@
 #include "utils.c"
 #include "cpuEmu.c"
 
-int runTimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac);
+int runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac);
+
+bool logs = false;
 
 int main(int argc, char *argv[]) {
   int fileArg = 1;
-  bool logs = false;
+  
+  
   if(strcmp(argv[1], "-l") == 0){
     printf("Logs enabled\n");
     fileArg = 2;
@@ -67,8 +70,8 @@ int main(int argc, char *argv[]) {
 
 
   // Start CPU 
-  Initialize(Memory, &runTimeLogs);
-  InitCycle(logs);
+  Initialize(Memory, &runtimeLogs);
+  InitCycle();
 
   // Print Preview
   if(logs){
@@ -86,7 +89,8 @@ int main(int argc, char *argv[]) {
 }
 
 
-int runTimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac){
-  printf("| PC: %d \t| IR: 0x%x \t| Accumulator: %d \n", pc, ir, Ac);
+int runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac){
+  if (logs) printf("| PC: %d \t| IR: 0x%x \t| Accumulator: %d \n", pc, ir, Ac);
+    
 }
 

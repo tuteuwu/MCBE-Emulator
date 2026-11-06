@@ -1,8 +1,5 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
 #include "ttyEmu.c"
 
 // Functions
@@ -29,9 +26,9 @@ static uint8_t Accumulator = 0;
 
 // Status
 static bool isOn = false;
-int (*logCallback)(uint8_t pc, uint8_t ir, uint8_t Ac);
+int (*callback)(uint8_t pc, uint8_t ir, uint8_t Ac);
 
-void Initialize(uint8_t mem[32], int (logFunction)(uint8_t pc, uint8_t ir, uint8_t Ac)){
+void Initialize(uint8_t mem[32], int (callbackFunction)(uint8_t pc, uint8_t ir, uint8_t Ac)){
   for(int i = 0; i < 32; i++){
     Memory[i] = mem[i];
   }
@@ -39,16 +36,13 @@ void Initialize(uint8_t mem[32], int (logFunction)(uint8_t pc, uint8_t ir, uint8
   InstructionRegister = 0;
   Accumulator = 0;
   isOn = true;
-  logCallback = logFunction;
+  callback = callbackFunction;
 }
 
-void InitCycle(bool logs){
+void InitCycle(){
   while (isOn){
     InstructionCycle();
-    if(logs){
-      logCallback(ProgramCounter, InstructionRegister, Accumulator);
-    }
-
+    callback(ProgramCounter, InstructionRegister, Accumulator);
   }
 }
 
