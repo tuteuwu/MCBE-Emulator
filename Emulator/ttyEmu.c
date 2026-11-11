@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
 
 void getUserInput(uint8_t *output){
   int input = 0;

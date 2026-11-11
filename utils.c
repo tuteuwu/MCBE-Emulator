@@ -1,11 +1,10 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
 uint8_t InstructionToBinary(char ints[4], int arg){
-  uint8_t bin = 0b00000000;
-  uint8_t arg_mask = 0b00011111;
+  uint8_t bin = 0b0;
+  uint8_t arg_mask = 0b11111;
   if (strcmp(ints, "NOP") == 0) {
     bin = 0b000 << 5;
   } else if (strcmp(ints, "HLT") == 0) {
@@ -42,4 +41,6 @@ char *ToBinaryString(uint8_t bin) {
   return str;
 }
 
-
+static inline void NewLine(void) {
+  putchar('\n');
+}

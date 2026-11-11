@@ -9,7 +9,6 @@ int8_t decodeOffset(uint8_t arg);
 void InstructionCycle();
 
 // ISA
-void NOP();
 void HLT(bool *b);
 void LD(uint8_t *ac, uint8_t *mem, uint8_t arg);
 void ST(uint8_t *ac, uint8_t *mem, uint8_t arg);
@@ -26,17 +25,16 @@ static uint8_t Accumulator = 0;
 
 // Status
 static bool isOn = false;
-int (*callback)(uint8_t pc, uint8_t ir, uint8_t Ac);
+void (*callback)(uint8_t pc, uint8_t ir, uint8_t Ac);
 
-void Initialize(uint8_t mem[32], int (callbackFunction)(uint8_t pc, uint8_t ir, uint8_t Ac)){
-  for(int i = 0; i < 32; i++){
-    Memory[i] = mem[i];
-  }
+void Initialize(uint8_t mem[32], void (callbackFunction)(uint8_t pc, uint8_t ir, uint8_t Ac)){
+  for (uint8_t i = 0; i < 32; i++) Memory[i] = mem[i];
   ProgramCounter = 0;
   InstructionRegister = 0;
   Accumulator = 0;
   isOn = true;
   callback = callbackFunction;
+  callback(ProgramCounter, InstructionRegister, Accumulator);
 }
 
 void InitCycle(){
@@ -53,7 +51,7 @@ void InstructionCycle(){
   inst = decode(&InstructionRegister, &arg);
   ProgramCounter++;
   switch(inst){
-    case 0: NOP(); break;
+    case 0: break;
     case 1: HLT(&isOn); break;
     case 2: LD(&Accumulator, Memory, arg); break;
     case 3: ST(&Accumulator, Memory, arg); break;
@@ -70,42 +68,32 @@ void fetch(uint8_t *mem, uint8_t  *pc, uint8_t  *ir){
 
 uint8_t decode(uint8_t *ir, uint8_t *argOut){
   *argOut = *ir & 0b00011111;
-  return ( *ir & 0b11100000 ) >> 5;
+  return ( *ir & (0b111 << 5) ) >> 5;
 }
 
 int8_t decodeOffset(uint8_t arg) {
-  return (arg & 0x10)
-    ? (int8_t)(arg | 0xE0)
+  return (arg & 0b00010000)
+    ? (int8_t)(arg | 0b11100000)
     : (int8_t)arg;
 }
 
-
-void NOP(){}
 void HLT(bool *b){
   *b = false;
 }
 void LD(uint8_t *ac, uint8_t *mem, uint8_t arg){
-  if(arg == 30){
-    getUserInput(&mem[30]);
-  }
+  if (arg == 30) getUserInput(&mem[30]);
   *ac = mem[arg];
 }
 void ST(uint8_t *ac, uint8_t *mem, uint8_t arg){
   mem[arg] = *ac;
-  if(arg == 31){
-    printOutput(mem[31]);
-  }
+  if(arg == 31) printOutput(mem[31]);
 }
 void ADD(uint8_t *ac, uint8_t *mem, uint8_t arg){
-  if(arg == 30){
-    getUserInput(&mem[30]);
-  }
+  if(arg == 30) getUserInput(&mem[30]);
   *ac += mem[arg];
 }
 void SUB(uint8_t *ac, uint8_t *mem, uint8_t arg){
-  if(arg == 30){
-    getUserInput(&mem[30]);
-  }
+  if(arg == 30) getUserInput(&mem[30]);
   *ac -= mem[arg];
 }
 void JMP(uint8_t *pc, int8_t arg){

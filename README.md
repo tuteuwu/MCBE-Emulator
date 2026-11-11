@@ -46,8 +46,5 @@ Emulador de la maquina conceptual MCBE (Modelo Computacional Básico Elemental)
 Instrucciones:
 
 - Las instrucciones se componen de 1 byte. donde los primeros 3 bits representan la instrucción y los ultimo 5 el argumento.
-
 - `    000        00000   `
-- `Instrucción   Argumento`
-
 - Esto da lugar a 8 instrucciones y 32 argumentos.

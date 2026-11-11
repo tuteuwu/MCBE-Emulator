@@ -2,20 +2,19 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <stdbool.h>
 #include "utils.c"
 #include "cpuEmu.c"
 
-int runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac);
+void runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac);
 
 bool logs = false;
 
 int main(int argc, char *argv[]) {
   int fileArg = 1;
   
-  
+  if(argc < 2) return 1;
   if(strcmp(argv[1], "-l") == 0){
-    printf("Logs enabled\n");
+    printf("Logs enabled\n\n\n");
     fileArg = 2;
     logs = true;
   }
@@ -46,7 +45,7 @@ int main(int argc, char *argv[]) {
   for (int j = 0; j < linesCounter; j++){
     char inst[4] = "";
     int arg = 0;
-    int n = sscanf(lines[j], "%3s %d", inst, &arg);
+    sscanf(lines[j], "%3s %d", inst, &arg);
 
     if(strcmp(inst, "JMP") == 0 || strcmp(inst, "JZ") == 0){
       if(arg < -16 || arg > 15){
@@ -67,30 +66,32 @@ int main(int argc, char *argv[]) {
 
     Memory[j] = InstructionToBinary(inst, arg);
   }
-
+  // Print Preview
+  NewLine();
+  printf("┌───────┬───────┬───────┬───────┬────────────┐\n");
+  printf("│ Line\t│ Inst\t│ Arg \t│ Hex \t│ Binary     │\n");
+  printf("├───────┼───────┼───────┼───────┼────────────┤\n");
+  for (int j = 0; j < linesCounter; j++)
+  {
+    char inst[4] = "---";
+    int arg = 0;
+    sscanf(lines[j], "%3s %d", inst, &arg);
+    printf("│ %d \t│ %s \t│ %d \t│ 0x%x\t│ 0b%s │\n", j, inst, arg, Memory[j], ToBinaryString(Memory[j]));
+  }
+  printf("└───────┴───────┴───────┴───────┴────────────┘\n");
+  printf(" Waiting for Keypress ");
+  getchar();
 
   // Start CPU 
   Initialize(Memory, &runtimeLogs);
   InitCycle();
 
-  // Print Preview
-  if(logs){
-    printf("\n| Line \t| Inst\t| Arg\t| Hex\n");
-    for(int j = 0; j < linesCounter; j++){
-      char inst[4] = "---";
-      int arg = 0;
-      sscanf(lines[j], "%3s %d", inst, &arg);
-      printf("| %d \t| %s \t| %d \t| %x\n", j, inst, arg, Memory[j]);
-    }
-  }
-
-
   return 0;
 }
 
 
-int runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac){
-  if (logs) printf("| PC: %d \t| IR: 0x%x \t| Accumulator: %d \n", pc, ir, Ac);
-    
+void runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac){
+  if (logs)
+    printf("| PC: %d \t| IR: 0x%x - 0b%s \t| Accumulator: %d \n", pc, ir, ToBinaryString(ir), Ac);
 }
 
