@@ -1,24 +1,24 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include "ttyEmu.c"
+#include "memEmu.h"
 
 // Functions
-void fetch(uint8_t *mem, uint8_t  *pc, uint8_t  *ir);
+void fetch(uint8_t  *pc, uint8_t  *ir);
 uint8_t decode(uint8_t *ir, uint8_t *argOut);
 int8_t decodeOffset(uint8_t arg);
 void InstructionCycle();
+void InitCycle();
 
 // ISA
 void HLT(bool *b);
-void LD(uint8_t *ac, uint8_t *mem, uint8_t arg);
-void ST(uint8_t *ac, uint8_t *mem, uint8_t arg);
-void ADD(uint8_t *ac, uint8_t *mem, uint8_t arg);
-void SUB(uint8_t *ac, uint8_t *mem, uint8_t arg);
+void LD(uint8_t *ac, uint8_t arg);
+void ST(uint8_t *ac, uint8_t arg);
+void ADD(uint8_t *ac, uint8_t arg);
+void SUB(uint8_t *ac, uint8_t arg);
 void JMP(uint8_t *pc, int8_t arg);
 void JZ(uint8_t *pc, uint8_t ac, int8_t arg);
 
 // Registers
-static uint8_t Memory[32];
 static uint8_t ProgramCounter = 0;
 static uint8_t InstructionRegister = 0;
 static uint8_t Accumulator = 0;
@@ -27,14 +27,17 @@ static uint8_t Accumulator = 0;
 static bool isOn = false;
 void (*callback)(uint8_t pc, uint8_t ir, uint8_t Ac);
 
-void Initialize(uint8_t mem[32], void (callbackFunction)(uint8_t pc, uint8_t ir, uint8_t Ac)){
-  for (uint8_t i = 0; i < 32; i++) Memory[i] = mem[i];
+void StartCPU(void (callbackFunction)(uint8_t pc, uint8_t ir, uint8_t Ac)){
+  // Reset Registers
   ProgramCounter = 0;
   InstructionRegister = 0;
   Accumulator = 0;
+  // Enable
   isOn = true;
   callback = callbackFunction;
   callback(ProgramCounter, InstructionRegister, Accumulator);
+  // Start
+  InitCycle();
 }
 
 void InitCycle(){
@@ -45,7 +48,7 @@ void InitCycle(){
 }
 
 void InstructionCycle(){
-  fetch(Memory, &ProgramCounter, &InstructionRegister);
+  fetch(&ProgramCounter, &InstructionRegister);
   uint8_t arg;
   uint8_t inst;
   inst = decode(&InstructionRegister, &arg);
@@ -53,17 +56,17 @@ void InstructionCycle(){
   switch(inst){
     case 0: break;
     case 1: HLT(&isOn); break;
-    case 2: LD(&Accumulator, Memory, arg); break;
-    case 3: ST(&Accumulator, Memory, arg); break;
-    case 4: ADD(&Accumulator, Memory, arg); break;
-    case 5: SUB(&Accumulator, Memory, arg); break;
+    case 2: LD(&Accumulator, arg); break;
+    case 3: ST(&Accumulator, arg); break;
+    case 4: ADD(&Accumulator, arg); break;
+    case 5: SUB(&Accumulator, arg); break;
     case 6: JMP(&ProgramCounter, decodeOffset(arg)); break;
     case 7: JZ(&ProgramCounter, Accumulator, decodeOffset(arg)); break;
   }
 }
 
-void fetch(uint8_t *mem, uint8_t  *pc, uint8_t  *ir){
-  *ir = mem[*pc];
+void fetch(uint8_t  *pc, uint8_t  *ir){
+  *ir = Memory_Read(*pc);
 }
 
 uint8_t decode(uint8_t *ir, uint8_t *argOut){
@@ -80,21 +83,17 @@ int8_t decodeOffset(uint8_t arg) {
 void HLT(bool *b){
   *b = false;
 }
-void LD(uint8_t *ac, uint8_t *mem, uint8_t arg){
-  if (arg == 30) getUserInput(&mem[30]);
-  *ac = mem[arg];
+void LD(uint8_t *ac, uint8_t arg){
+  *ac = Memory_Read(arg);
 }
-void ST(uint8_t *ac, uint8_t *mem, uint8_t arg){
-  mem[arg] = *ac;
-  if(arg == 31) printOutput(mem[31]);
+void ST(uint8_t *ac, uint8_t arg){
+  Memory_Write(arg, *ac);
 }
-void ADD(uint8_t *ac, uint8_t *mem, uint8_t arg){
-  if(arg == 30) getUserInput(&mem[30]);
-  *ac += mem[arg];
+void ADD(uint8_t *ac, uint8_t arg){
+  *ac += Memory_Read(arg);
 }
-void SUB(uint8_t *ac, uint8_t *mem, uint8_t arg){
-  if(arg == 30) getUserInput(&mem[30]);
-  *ac -= mem[arg];
+void SUB(uint8_t *ac, uint8_t arg){
+  *ac -= Memory_Read(arg);
 }
 void JMP(uint8_t *pc, int8_t arg){
   *pc += arg;

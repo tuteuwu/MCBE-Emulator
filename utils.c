@@ -2,9 +2,9 @@
 #include <stdint.h>
 #include <string.h>
 
-uint8_t InstructionToBinary(char ints[4], int arg){
+uint8_t InstructionToBinary(char ints[4], uint8_t arg){
   uint8_t bin = 0b0;
-  uint8_t arg_mask = 0b11111;
+  uint8_t arg_mask = 0b00011111;
   if (strcmp(ints, "NOP") == 0) {
     bin = 0b000 << 5;
   } else if (strcmp(ints, "HLT") == 0) {
@@ -25,7 +25,7 @@ uint8_t InstructionToBinary(char ints[4], int arg){
     arg_mask = 0b11111111;
   }
 
-  bin |= ((uint8_t)arg & arg_mask);
+  bin |= (arg & arg_mask);
 
   return bin;
 }
@@ -36,7 +36,6 @@ char *ToBinaryString(uint8_t bin) {
   for (int i = 7; i >= 0; i--) {
     str[7 - i] = ((bin >> i) & 1) + '0';
   }
-
   str[8] = '\0';
   return str;
 }

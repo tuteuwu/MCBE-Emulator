@@ -8,13 +8,13 @@ void getUserInput(uint8_t *output){
   if ( scanf("%d", &input) == 1 ){
     if(input > 127 || input < -128){
       printf("Not valid input. Using 0\n");
-      *output = (uint8_t)input;
+      *output = 0;
     }else{
       *output = (uint8_t)input;
     }
   } else {
     printf("Not valid input. Using 0\n");
-    *output = (uint8_t)input;
+    *output = 0;
   }
 }
 
