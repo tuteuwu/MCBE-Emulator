@@ -1,0 +1,3 @@
+[submodule "lib/libflags"]
+	path = lib/libflags
+	url = https://github.com/tuteuwu/Libflags.git

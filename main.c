@@ -2,27 +2,30 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+
 #include "utils.c"
 #include "Emulator/memEmu.h"
 #include "Emulator/cpuEmu.h"
+#include "lib/libflags/libflags.h"
 
 void runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac);
-
-bool logs = false;
+void printPreview(int linesC, char lines[][16]);
+FLAGS flags;
 
 int main(int argc, char *argv[]) {
-  int fileArg = 1;
   
   if(argc < 2) return 1;
-  if(strcmp(argv[1], "-l") == 0){
-    printf("Logs enabled\n\n\n");
-    fileArg = 2;
-    logs = true;
-  }
 
   
+  flags = CreateFlags(2);
+  flags.flags[0] = 'v';
+  flags.flags[1] = 'l';
 
-  FILE *file = fopen(argv[fileArg], "r");
+  int flagsParseStatus = FlagParse(&flags, &argc, argv);
+
+  if(flagsParseStatus != 0) printf("Not valid flags\n");
+
+  FILE *file = fopen(argv[1], "r");
   char lines[32][16];
   if (file == NULL) {
     printf("Unable to open file.\n");
@@ -79,20 +82,7 @@ int main(int argc, char *argv[]) {
   InitMemory(&mem);
 
   // Print Preview
-  NewLine();
-  printf("┌───────┬───────┬───────┬───────┬────────────┐\n");
-  printf("│ Line\t│ Inst\t│ Arg \t│ Hex \t│ Binary     │\n");
-  printf("├───────┼───────┼───────┼───────┼────────────┤\n");
-  for (int i = 0; i < linesCounter; i++)
-  {
-    char inst[4] = "---";
-    int arg = 0;
-    sscanf(lines[i], "%3s %d", inst, &arg);
-    printf("│ %d \t│ %s \t│ %d \t│ 0x%x\t│ 0b%s │\n", i, inst, arg, Memory_Read(i), ToBinaryString(Memory_Read(i)));
-  }
-  printf("└───────┴───────┴───────┴───────┴────────────┘\n");
-  printf(" Waiting for Keypress ");
-  getchar();
+  if(flags.enabledFlags[0]) printPreview(linesCounter, lines);
 
   // Start CPU 
   StartCPU(&runtimeLogs);
@@ -102,7 +92,23 @@ int main(int argc, char *argv[]) {
 
 
 void runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac){
-  if (logs)
+  if (flags.enabledFlags[1])
     printf("| PC: %d \t| IR: 0x%x - 0b%s \t| Accumulator: %d \n", pc, ir, ToBinaryString(ir), Ac);
+}
+
+
+void printPreview(int linesC, char lines[][16]){
+  NewLine();
+  printf("┌───────┬───────┬───────┬───────┬────────────┐\n");
+  printf("│ Line\t│ Inst\t│ Arg \t│ Hex \t│ Binary     │\n");
+  printf("├───────┼───────┼───────┼───────┼────────────┤\n");
+  for (int i = 0; i < linesC; i++)
+  {
+    char inst[4] = "---";
+    int arg = 0;
+    sscanf(lines[i], "%3s %d", inst, &arg);
+    printf("│ %d \t│ %s \t│ %d \t│ 0x%x\t│ 0b%s │\n", i, inst, arg, Memory_Read(i), ToBinaryString(Memory_Read(i)));
+  }
+  printf("└───────┴───────┴───────┴───────┴────────────┘\n");
 }
 
