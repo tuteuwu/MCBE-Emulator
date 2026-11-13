@@ -7,10 +7,10 @@
 #include "Emulator/memEmu.h"
 #include "Emulator/cpuEmu.h"
 #include "lib/libflags/libflags.h"
-#include "compiler.h"
+#include "Compiler/compiler.h"
 
 void runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac);
-void compileError(int line, char inst[4], int arg, uint8_t errorCode);
+void compileError(CompileError error, int line, char codeLine[16]);
 void preview();
 
 FLAGS flags;
@@ -43,14 +43,16 @@ int main(int argc, char *argv[]) {
   fclose(file);
 
   // Emulator Data
-  MEMORY mem;
+  MEMORY mem = {0};
 
-  // Reset Memory
-  for(int i = 0; i < 32; i++)
-    mem[i] = 0;
+  // Compiling And memory load
+  int errorLine = 0;
+  CompileError err = ASM_TO_BIN(&mcbeFile, &mem, &errorLine);
 
-  // Load to Memory
-  ASM_TO_BIN(mcbeFile, &mem, &compileError);
+  if (err != COMPILE_OK){
+    compileError(err, errorLine, mcbeFile.lines[errorLine]);
+    return 1;
+  }
 
   // Init Memory
   InitMemory(&mem);
@@ -64,51 +66,51 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-
 void runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac){
-  if (flags.enabledFlags[1]){
-    char instAndArg[16];
-    char inst[4] = "---";
-    int arg = 0;
-    sscanf(mcbeFile.lines[pc], "%3s %d", inst, &arg);
-    sprintf(instAndArg, "%3s  %+2d", inst, arg);
-    printf(" ASM: %s \t| PC: %d \t| IR: 0x%02x - 0b%s \t| Accumulator: %d \n", instAndArg, pc, ir, ToBinaryString(ir), Ac);
+  if (flags.enabledFlags[1]) {
+    Decoded d = Mnemonic_Decode(ir);
+    if(d.mnemonic != NULL) {
+      printf("\t\t│ PC: %02d, IR: 0x%02x - 0b%s, Accummulator: %d\n\
+              \t│ ASM:%3s %d\n\n",
+             pc, ir, ToBinaryString(ir), Ac,
+             d.mnemonic->name, d.arg);
+    }
   }
-    
 }
 
 void preview(){
   NewLine();
   printf("┌───────┬───────┬───────┬───────┬────────────┐\n");
   printf("│ Line\t│ Inst\t│ Arg \t│ Hex \t│ Binary     │\n");
-  printf("├───────┼───────┼───────┼───────┼────────────┤\n");
-  for (int i = 0; i < mcbeFile.length; i++)
-  {
+  printf("├───────┼───────┴───────┼───────┼────────────┤\n");
+  for (int i = 0; i < mcbeFile.length; i++) {
     char inst[4] = "---";
     int arg = 0;
     uint8_t memPeek = Memory_Peek(i);
-        sscanf(mcbeFile.lines[i], "%3s %d", inst, &arg);
-        printf("│ %d \t│ %s \t┇ %d \t│ 0x%02x\t│ 0b%s │\n", i, inst, arg, memPeek, ToBinaryString(memPeek));
+    sscanf(mcbeFile.lines[i], "%3s %d", inst, &arg);
+    printf("│ %d \t│ %s \t   %d \t│ 0x%02x\t│ 0b%s │\n", i, inst, arg, memPeek, ToBinaryString(memPeek));
   }
-  printf("└───────┴───────┴───────┴───────┴────────────┘\n");
+  printf("└───────┴───────────────┴───────┴────────────┘\n");
   NewLine();
 }
 
-void compileError(int line, char inst[4], int arg, uint8_t errorCode) {
-  switch (errorCode)
-  {
-  case 1:
-    printf("Value out of range. \n\t LINE: %d | %s %d", line, inst, arg);
-    break;
-  case 2:
-    printf("Memory address 31 is Read-Only. \n\t LINE: %d | %s %d", line, inst, arg);
-    break;
-  case 3:
-    printf("Memory address 30 is Write-Only. \n\t LINE: %d | %s %d", line, inst, arg);
-    break;
-
-  default:
-    printf("Unknown error. \n\t LINE: %d | %s %d", line, inst, arg);
-    break;
+void compileError(CompileError error, int line, char codeLine[16]) {
+  switch (error) {
+    case ERR_RANGE:
+      printf("Value out of range!\n\t Line: %d | %s", line, codeLine);
+      break;
+    case ERR_READ_ONLY:
+      printf("Memory Address 30 is Read-Only!\n\t Line: %d | %s", line, codeLine);
+      break;
+    case ERR_WRITE_ONLY:
+      printf("Memory Address 31 is Write-Only!\n\t Line: %d | %s", line, codeLine);
+      break;
+    case ERR_UNKNOWN_MNEMONIC:
+      printf("Mnemonic unknown!\n\t Line: %d | %s", line, codeLine);
+      break;
+    default:
+      printf("Unknown error!\n\t Line: %d | %s", line, codeLine);
+      break;
   }
+  NewLine();
 }

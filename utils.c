@@ -1,8 +1,5 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <string.h>
-
-
 
 char *ToBinaryString(uint8_t bin) {
   static char str[9];

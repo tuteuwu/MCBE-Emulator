@@ -1,10 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "ttyEmu.c"
-
-#define MEMORY_SIZE 32
-
-typedef uint8_t MEMORY[MEMORY_SIZE];
+#include "memEmu.h"
 
 static MEMORY systemMemory;
 

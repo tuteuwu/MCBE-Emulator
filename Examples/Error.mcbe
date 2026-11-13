@@ -1,0 +1,12 @@
+JMP 1
+SET 127
+LD  30
+JZ  5 
+ST  29
+LD  30
+SUB 1
+ADD 29
+JMP -7
+LD  29
+ST  31
+HLT
