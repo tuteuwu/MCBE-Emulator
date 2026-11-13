@@ -1,16 +1,20 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "utils.c"
 #include "Emulator/memEmu.h"
 #include "Emulator/cpuEmu.h"
 #include "lib/libflags/libflags.h"
+#include "compiler.h"
 
 void runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac);
-void printPreview(int linesC, char lines[][16]);
+void compileError(int line, char inst[4], int arg, uint8_t errorCode);
+void preview();
+
 FLAGS flags;
+MCBE_FILE mcbeFile;
 
 int main(int argc, char *argv[]) {
   
@@ -23,17 +27,19 @@ int main(int argc, char *argv[]) {
 
   int flagsParseStatus = FlagParse(&flags, &argc, argv);
 
-  if(flagsParseStatus != 0) printf("Not valid flags\n");
+  if(flagsParseStatus != 0) {
+    printf("Not valid flags\n");
+    return 1;
+  }
 
   FILE *file = fopen(argv[1], "r");
-  char lines[32][16];
+  
   if (file == NULL) {
     printf("Unable to open file.\n");
     return 1;
   }
-  uint8_t linesCounter = 0;
-  while (linesCounter < 32 && fgets(lines[linesCounter], sizeof(lines[linesCounter]), file) != NULL)
-    linesCounter++;
+  
+  mcbeFile = Create_MCBE_File(file);
   fclose(file);
 
   // Emulator Data
@@ -44,45 +50,13 @@ int main(int argc, char *argv[]) {
     mem[i] = 0;
 
   // Load to Memory
-  for (int i = 0; i < linesCounter; i++) {
-    char inst[4] = "";
-    int arg = 0;
-    sscanf(lines[i], "%3s %d", inst, &arg);
-
-    if(strcmp(inst, "JMP") == 0 || strcmp(inst, "JZ") == 0) {
-      if ((arg < -16 || arg > 15) || (arg + i > 29 || arg + i < 0)){
-        printf("value out of range. \n\tLine %d | %s %d\n", i, inst, arg);
-        return 1;
-      }
-    }
-    else if(strcmp(inst, "SET") == 0) {
-      if(arg < -128 || arg > 127){
-        printf("value out of range. \n\tLine %d | %s %d\n", i, inst, arg);
-        return 1;
-      }
-    }
-    else if (strcmp(inst, "LD") == 0 && arg == 31) {
-      printf("Memory address 31 is Write-Only. \n\tLine %d | %s %d\n", i, inst, arg);
-      return 1;
-    }
-    else if (strcmp(inst, "ST") == 0 && arg == 30) {
-      printf("Memory address 30 is Read-Only. \n\tLine %d | %s %d\n", i, inst, arg);
-      return 1;
-    }
-    else {
-      if (arg >= 32 || arg < 0) {
-        printf("value out of range. \n\tLine %d | %s %d\n", i, inst, arg);
-        return 1;
-      }
-    }
-    mem[i] = InstructionToBinary(inst, arg);
-  }
+  ASM_TO_BIN(mcbeFile, &mem, &compileError);
 
   // Init Memory
   InitMemory(&mem);
-
+  
   // Print Preview
-  if(flags.enabledFlags[0]) printPreview(linesCounter, lines);
+  if(flags.enabledFlags[0]) preview();
 
   // Start CPU 
   StartCPU(&runtimeLogs);
@@ -92,23 +66,49 @@ int main(int argc, char *argv[]) {
 
 
 void runtimeLogs(uint8_t pc, uint8_t ir, uint8_t Ac){
-  if (flags.enabledFlags[1])
-    printf("| PC: %d \t| IR: 0x%x - 0b%s \t| Accumulator: %d \n", pc, ir, ToBinaryString(ir), Ac);
+  if (flags.enabledFlags[1]){
+    char instAndArg[16];
+    char inst[4] = "---";
+    int arg = 0;
+    sscanf(mcbeFile.lines[pc], "%3s %d", inst, &arg);
+    sprintf(instAndArg, "%3s  %+2d", inst, arg);
+    printf(" ASM: %s \t| PC: %d \t| IR: 0x%02x - 0b%s \t| Accumulator: %d \n", instAndArg, pc, ir, ToBinaryString(ir), Ac);
+  }
+    
 }
 
-
-void printPreview(int linesC, char lines[][16]){
+void preview(){
   NewLine();
   printf("┌───────┬───────┬───────┬───────┬────────────┐\n");
   printf("│ Line\t│ Inst\t│ Arg \t│ Hex \t│ Binary     │\n");
   printf("├───────┼───────┼───────┼───────┼────────────┤\n");
-  for (int i = 0; i < linesC; i++)
+  for (int i = 0; i < mcbeFile.length; i++)
   {
     char inst[4] = "---";
     int arg = 0;
-    sscanf(lines[i], "%3s %d", inst, &arg);
-    printf("│ %d \t│ %s \t│ %d \t│ 0x%x\t│ 0b%s │\n", i, inst, arg, Memory_Read(i), ToBinaryString(Memory_Read(i)));
+    uint8_t memPeek = Memory_Peek(i);
+        sscanf(mcbeFile.lines[i], "%3s %d", inst, &arg);
+        printf("│ %d \t│ %s \t┇ %d \t│ 0x%02x\t│ 0b%s │\n", i, inst, arg, memPeek, ToBinaryString(memPeek));
   }
   printf("└───────┴───────┴───────┴───────┴────────────┘\n");
+  NewLine();
 }
 
+void compileError(int line, char inst[4], int arg, uint8_t errorCode) {
+  switch (errorCode)
+  {
+  case 1:
+    printf("Value out of range. \n\t LINE: %d | %s %d", line, inst, arg);
+    break;
+  case 2:
+    printf("Memory address 31 is Read-Only. \n\t LINE: %d | %s %d", line, inst, arg);
+    break;
+  case 3:
+    printf("Memory address 30 is Write-Only. \n\t LINE: %d | %s %d", line, inst, arg);
+    break;
+
+  default:
+    printf("Unknown error. \n\t LINE: %d | %s %d", line, inst, arg);
+    break;
+  }
+}

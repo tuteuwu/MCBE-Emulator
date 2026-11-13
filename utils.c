@@ -2,33 +2,6 @@
 #include <stdint.h>
 #include <string.h>
 
-uint8_t InstructionToBinary(char ints[4], uint8_t arg){
-  uint8_t bin = 0b0;
-  uint8_t arg_mask = 0b00011111;
-  if (strcmp(ints, "NOP") == 0) {
-    bin = 0b000 << 5;
-  } else if (strcmp(ints, "HLT") == 0) {
-    bin = 0b001 << 5;
-  } else if (strcmp(ints, "LD") == 0) {
-    bin = 0b010 << 5;
-  } else if (strcmp(ints, "ST") == 0) {
-    bin = 0b011 << 5;
-  } else if (strcmp(ints, "ADD") == 0) {
-    bin = 0b100 << 5;
-  } else if (strcmp(ints, "SUB") == 0) {
-    bin = 0b101 << 5;
-  } else if (strcmp(ints, "JMP") == 0) {
-    bin = 0b110 << 5;
-  } else if (strcmp(ints, "JZ") == 0) {
-    bin = 0b111 << 5;
-  } else if (strcmp(ints, "SET") == 0) {
-    arg_mask = 0b11111111;
-  }
-
-  bin |= (arg & arg_mask);
-
-  return bin;
-}
 
 
 char *ToBinaryString(uint8_t bin) {

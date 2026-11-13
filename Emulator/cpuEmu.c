@@ -6,7 +6,7 @@
 void fetch(uint8_t  *pc, uint8_t  *ir);
 uint8_t decode(uint8_t *ir, uint8_t *argOut);
 int8_t decodeOffset(uint8_t arg);
-void InstructionCycle();
+void execute(uint8_t inst, uint8_t arg);
 void InitCycle();
 
 // ISA
@@ -24,7 +24,7 @@ static uint8_t InstructionRegister = 0;
 static uint8_t Accumulator = 0;
 
 // Status
-static bool isOn = false;
+bool isOn = false;
 void (*callback)(uint8_t pc, uint8_t ir, uint8_t Ac);
 
 void StartCPU(void (callbackFunction)(uint8_t pc, uint8_t ir, uint8_t Ac)){
@@ -35,24 +35,24 @@ void StartCPU(void (callbackFunction)(uint8_t pc, uint8_t ir, uint8_t Ac)){
   // Enable
   isOn = true;
   callback = callbackFunction;
-  callback(ProgramCounter, InstructionRegister, Accumulator);
   // Start
   InitCycle();
 }
 
 void InitCycle(){
   while (isOn){
-    InstructionCycle();
+    // Intruction Cycle
+    uint8_t inst;
+    uint8_t arg;
+    fetch(&ProgramCounter, &InstructionRegister);
+    inst = decode(&InstructionRegister, &arg);
     callback(ProgramCounter, InstructionRegister, Accumulator);
+    ProgramCounter++;
+    execute(inst, arg);
   }
 }
 
-void InstructionCycle(){
-  fetch(&ProgramCounter, &InstructionRegister);
-  uint8_t arg;
-  uint8_t inst;
-  inst = decode(&InstructionRegister, &arg);
-  ProgramCounter++;
+void execute(uint8_t inst, uint8_t arg){
   switch(inst){
     case 0: break;
     case 1: HLT(&isOn); break;
@@ -80,7 +80,7 @@ int8_t decodeOffset(uint8_t arg) {
     : (int8_t)arg;
 }
 
-void HLT(bool *b){
+void HLT(bool *b) {
   *b = false;
 }
 void LD(uint8_t *ac, uint8_t arg){

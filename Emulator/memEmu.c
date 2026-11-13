@@ -6,7 +6,7 @@
 
 typedef uint8_t MEMORY[MEMORY_SIZE];
 
-MEMORY systemMemory;
+static MEMORY systemMemory;
 
 void InitMemory(MEMORY *mem){
   for (uint8_t i = 0; i < MEMORY_SIZE; i++)
@@ -24,4 +24,8 @@ void Memory_Write(uint8_t address, uint8_t value){
   if (address == 31)
     printOutput(systemMemory[address]);
   
+}
+
+uint8_t Memory_Peek(uint8_t address) {
+  return (address < MEMORY_SIZE) ? systemMemory[address] : 0;
 }
